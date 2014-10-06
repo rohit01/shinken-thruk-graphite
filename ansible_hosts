@@ -1,2 +1,3 @@
 [shinken]
-127.0.0.1
+## Using hostname as FQDN as shinken ui-graphite module is configured to use hostname
+54.169.104.144 host_hostname=shinken-demo.rohit.io host_fqdn=shinken-demo.rohit.io

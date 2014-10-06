@@ -16,6 +16,7 @@ plugins_env_requirements:
 ## <ChangeThis>
 shinken_users:
   ## Username: Password
-  "admin": "admin"                 # Default shinken WebUI login. http://localhost
-  "thrukadmin": "thrukadmin"       # Default Thruk UI login. http://localhost/thruk/
-  #--- <<You may add more users here>>
+  "admin": "admin"                 # Admin for WebUI login. http://localhost
+  "thrukadmin": "thrukadmin"       # Admin for Thruk UI login. http://localhost/thruk/
+  "demo": "welcome"                # Defined in contacts for demo purpose
+  #--- <<Define more users here>>
