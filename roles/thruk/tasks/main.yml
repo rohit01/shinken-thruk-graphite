@@ -21,6 +21,3 @@
   args:
     chdir: "/usr/src/"
     creates: "/etc/thruk/thruk.conf"
-
-- name: "Ensure thruk is enabled and started"
-  service: name=thruk state=started enabled=yes

@@ -12,9 +12,9 @@
     ## Standars installation of desired softwares
     - apache                    # Webserver for Shinken, Graphite and Thruk
     - redis                     # Used for retaining data between shinken restarts
+    - shinken                   # Shinken monitoring server
     - monitoring_plugins        # NRPE plugins
-    - shinken                   # Monitoring server
     - thruk                     # Thruk UI powered by shinken livestatus API
     - graphite                  # Graphite for graphs
-    ## Stich everything into one piece for a common goal
+    ## Stitch everything into one piece for a common goal
     - configure

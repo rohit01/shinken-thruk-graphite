@@ -95,6 +95,14 @@
     archive=yes
     rsync_opts="--no-owner,--no-group"
 
+- name: "Update monitoring-plugins permissions"
+  file: >
+    path="/usr/local/libexec/"
+    owner="root"
+    group="root"
+    recurse=yes
+    mode=4750
+
 #### plugins softlink to default location #####################################
 - name: "Ensure directory exists - /usr/lib/nagios/"
   file: >

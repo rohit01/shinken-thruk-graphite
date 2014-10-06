@@ -9,7 +9,7 @@
   shell: "su - shinken -c 'shinken install {{ item.key }}'"
   args:
     creates: "/etc/shinken/modules/{{ item.value }}"
-  notify: restart shinken-arbiter
+  notify: restart shinken
   with_dict:
     "webui": "webui.cfg"
     "auth-htpasswd": "auth_htpasswd.cfg"
@@ -37,7 +37,7 @@
     owner=shinken
     group=shinken
     mode=0644
-  notify: restart shinken-arbiter
+  notify: restart shinken
   with_dict:
     "shinken/broker-master.cfg": "/etc/shinken/brokers/broker-master.cfg"
     "shinken/scheduler-master.cfg": "/etc/shinken/schedulers/scheduler-master.cfg"
@@ -52,7 +52,7 @@
     owner=shinken
     group=shinken
     mode=0644
-  notify: restart shinken-arbiter
+  notify: restart shinken
   with_dict:
     "ui-graphite.cfg": "/etc/shinken/modules/ui-graphite.cfg"
 
@@ -63,7 +63,7 @@
     owner=shinken
     group=shinken
     mode=0644
-  notify: restart shinken-arbiter
+  notify: restart shinken
 
 - name: "Copy custom configuration"
   synchronize: >
@@ -83,20 +83,3 @@
     group=shinken
     mode=0644
   notify: restart shinken-arbiter
-
-## Enable sudo access for user: shinken
-- name: "Include /etc/sudoers.d in sudoers file"
-  lineinfile: >
-    dest="/etc/sudoers"
-    line="#includedir /etc/sudoers.d"
-    state="present"
-    validate='visudo -cf %s'
-
-- name: "Grant sudo access for user - shinken"
-  copy: >
-    content="%shinken ALL=(ALL) NOPASSWD:ALL"
-    dest="/etc/sudoers.d/shinken"
-    owner="root"
-    group="root"
-    mode="0400"
-    validate='visudo -cf %s'

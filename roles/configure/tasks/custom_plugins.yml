@@ -39,7 +39,6 @@
     recursive=yes
     archive=yes
     rsync_opts="--no-owner,--no-group"
-  notify: restart shinken-arbiter
 
 - name: "Update custom plugins & python_env ownership"
   file: >

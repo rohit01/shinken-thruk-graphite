@@ -20,6 +20,3 @@
     owner=root
     group=root
   notify: restart apache
-
-- name: http service state
-  service: name=apache2 state=started enabled=yes

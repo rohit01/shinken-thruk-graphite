@@ -6,6 +6,3 @@
     state="present"
     update_cache=yes
     cache_valid_time={{ apt_cache_time }}
-
-- name: "Enable redis to start on boot"
-  service: name=redis-server runlevel="2345" enabled="yes" state="started"

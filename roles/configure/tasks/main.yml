@@ -12,3 +12,13 @@
 
 # create users for login
 - include: create_users.yml
+
+- name: "Enable and start configured services"
+  service: name="{{ item }}" state=started enabled=yes
+  with_items:
+    - apache2
+    - gunicorn
+    - redis-server
+    - shinken
+    - supervisor
+    - thruk
