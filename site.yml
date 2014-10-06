@@ -1,0 +1,20 @@
+---
+##
+- hosts: shinken
+  gather_facts: no
+  sudo: yes
+  vars_files:
+    - "vars/main.yml"
+
+  roles:
+    ## Configure timezone and update apt repository in first run
+    - system_defaults
+    ## Standars installation of desired softwares
+    - apache                    # Webserver for Shinken, Graphite and Thruk
+    - redis                     # Used for retaining data between shinken restarts
+    - monitoring_plugins        # NRPE plugins
+    - shinken                   # Monitoring server
+    - thruk                     # Thruk UI powered by shinken livestatus API
+    - graphite                  # Graphite for graphs
+    ## Stich everything into one piece for a common goal
+    - configure

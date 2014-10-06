@@ -1,0 +1,25 @@
+---
+# Apache installation
+- name: install apache
+  apt: >
+    name="{{ item }}"
+    state="present"
+    update_cache=yes
+    cache_valid_time="{{ apt_cache_time }}"
+  with_items:
+   - apache2
+   - php5-gd
+   - libgd2-xpm-dev
+   - libapache2-mod-php5
+
+- name: "Activate Apache cgi on Ubuntu 14.04"
+  file: >
+    src=/etc/apache2/mods-available/cgi.load
+    dest=/etc/apache2/mods-enabled/cgi.load
+    state=link
+    owner=root
+    group=root
+  notify: restart apache
+
+- name: http service state
+  service: name=apache2 state=started enabled=yes

@@ -1,0 +1,2 @@
+## Graphite login is only used by shinken
+BASIC_AUTH_FILE: "/etc/apache2/htpasswd-graphite.users"

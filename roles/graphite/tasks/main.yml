@@ -1,0 +1,124 @@
+---
+- name: "Install git, supervisor and python dependencies"
+  apt: >
+    name={{ item }}
+    state="present"
+    update_cache=yes
+    cache_valid_time={{ apt_cache_time }}
+  with_items:
+    - python-pip
+    - python-dev
+    - gcc
+    - git
+    - supervisor
+    - sqlite3
+    - libcairo2
+    - libcairo2-dev
+    - python-cairo
+    - python-passlib
+
+- name: "Install graphite and its dependencies"
+  pip: >
+    name={{ item }}
+  with_items:
+    - Twisted==11.1.0              # Graphite does not work with Twisted>=12
+    - flup==1.0.2
+    - django==1.5.10
+    - django-tagging==0.3.2
+    - https://github.com/graphite-project/ceres/tarball/master
+    - whisper==0.9.12
+    - carbon==0.9.12
+    - graphite-web==0.9.12
+    - gunicorn==19.1.1
+
+- name: "Configure graphite"
+  copy: >
+    src="{{ item }}"
+    dest="/opt/graphite/conf/{{ item }}"
+    owner=root
+    group=root
+    mode=0644
+  with_items:
+    - carbon.conf
+    - storage-schemas.conf
+    - storage-aggregation.conf
+  notify: "restart supervisor"
+
+- name: "Ensure log directory exists for installed applications"
+  file: >
+    path="{{ item }}"
+    state="directory"
+    mode="0755"
+  with_items:
+    - /var/log/graphite
+
+- name: "sync django db for graphite"
+  django_manage: >
+    command=syncdb
+    app_path="/opt/graphite/webapp/graphite/"
+
+- name: "Configure supervisor"
+  copy: >
+    src="supervisord.conf"
+    dest="/etc/supervisor/conf.d/supervisord.conf"
+    owner=root
+    group=root
+    mode=0644
+  notify: "restart supervisor"
+
+- name: "Copy gunicorn init script"
+  copy: >
+    src="gunicorn"
+    dest="/etc/init.d/gunicorn"
+    owner=root
+    group=root
+    mode=0755
+  notify: restart gunicorn
+
+- name: "Configure apache for graphite backend"
+  template: >
+    src="apache_graphite.conf.j2"
+    dest="/etc/apache2/sites-available/apache_graphite.conf"
+    owner=root
+    group=root
+    mode=0644
+  notify: "restart apache"
+
+- name: "Enable graphite port '8080' in apache"
+  copy: >
+    src="ports.conf"
+    dest="/etc/apache2/ports.conf"
+    owner=root
+    group=root
+    mode=0644
+  notify: "restart apache"
+
+- name: "Enable graphite site on apache"
+  file: >
+    src="/etc/apache2/sites-available/apache_graphite.conf"
+    dest="/etc/apache2/sites-enabled/apache_graphite.conf"
+    state="link"
+  notify: "restart apache"
+
+- name: "Configure django for graphite frontend"
+  template: >
+    src="local_settings.py.j2"
+    dest="/opt/graphite/webapp/graphite/local_settings.py"
+    owner=root
+    group=root
+    mode=0644
+
+- name: "Create graphite user"
+  htpasswd: >
+    path="{{ BASIC_AUTH_FILE }}"
+    name="{{ BASIC_AUTH_USER }}"
+    password="{{ BASIC_AUTH_PASSWORD }}"
+    state=present
+  notify: "restart apache"
+
+- name: "Enable and start required services"
+  service: name="{{ item }}" state=started enabled=yes
+  with_items:
+    - gunicorn
+    - apache2
+    - supervisor

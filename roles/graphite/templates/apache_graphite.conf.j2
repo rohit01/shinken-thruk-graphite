@@ -1,0 +1,17 @@
+<VirtualHost *:8080>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    Options ExecCGI FollowSymLinks
+    AuthName "Graphite-Shinken"
+    AuthType Basic
+    AuthUserFile {{ BASIC_AUTH_FILE }}
+    Require valid-user
+
+    ProxyPass http://127.0.0.1:8081
+    ProxyPassReverse http://127.0.0.1:8081
+</VirtualHost>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

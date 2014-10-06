@@ -1,0 +1,26 @@
+---
+# Install thruk UI for use with shinken
+- name: Install Thruk dependencies
+  apt: >
+    name={{ item }}
+    state="present"
+    update_cache=yes
+    cache_valid_time={{ apt_cache_time }}
+  with_items:
+    - libapache2-mod-fcgid
+    - xvfb
+
+- name: "Copy thruk installer (.deb file)"
+  copy: >
+    src="{{ thruk_version }}.deb"
+    dest="/usr/src/"
+    mode=0644
+
+- name: "Install Thruk"
+  shell: "dpkg -iE {{ thruk_version }}.deb"
+  args:
+    chdir: "/usr/src/"
+    creates: "/etc/thruk/thruk.conf"
+
+- name: "Ensure thruk is enabled and started"
+  service: name=thruk state=started enabled=yes

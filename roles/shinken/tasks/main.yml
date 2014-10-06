@@ -1,0 +1,40 @@
+---
+# Shinken installation
+- name: "Install required system packages for shinken using apt-get"
+  apt: >
+    name="{{ item }}"
+    state="present"
+    update_cache=yes
+    cache_valid_time={{ apt_cache_time }}
+  with_items:
+    - python-pip
+    - python-pycurl
+    - python-cherrypy3
+    - python-setuptools
+    - mailutils
+
+- name: "Add linux user group - shinken"
+  group: >
+    name="shinken"
+    state="present"
+
+- name: "Add linux user - shinken"
+  user: >
+    name="shinken"
+    group="shinken"
+    createhome=yes
+    move_home=yes
+    comment="shinken"
+    shell="/bin/bash"
+    state="present"
+
+- name: "Shinken install using pip"
+  pip: name="shinken" state="present"
+
+- name: "Update monitoring-plugins ownership, if installed"
+  file: >
+    path="/usr/local/libexec"
+    owner="shinken"
+    group="shinken"
+    recurse=yes
+  ignore_errors: yes

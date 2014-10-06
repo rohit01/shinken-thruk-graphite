@@ -1,0 +1,52 @@
+---
+# Custom plugins for shinken (apart from standard monitoring plugins)
+- name: "Install python-dev packages"
+  apt: >
+    name={{ item }}
+    state="present"
+    update_cache=yes
+    cache_valid_time={{ apt_cache_time }}
+  with_items:
+    - python-dev
+    - python-pip
+
+- name: "create custom plugins & env directory"
+  file: >
+    path="{{ item }}"
+    owner=shinken
+    group=shinken
+    mode=0755
+    state="directory"
+  with_items:
+    - "{{ custom_plugins_dir }}"
+    - "{{ custom_plugins_env }}"
+
+- name: "Install virtualenv"
+  pip: name="virtualenv" state="present"
+
+- name: "Install python requirements under shinken virtualenv"
+  pip: >
+    virtualenv_site_packages=no
+    name={{ item }}
+    virtualenv="{{ custom_plugins_env }}"
+  with_items: plugins_env_requirements
+
+- name: "Copy custom plugins"
+  synchronize: >
+    src="plugins/"
+    dest="{{ custom_plugins_dir }}/"
+    mode="push"
+    recursive=yes
+    archive=yes
+    rsync_opts="--no-owner,--no-group"
+  notify: restart shinken-arbiter
+
+- name: "Update custom plugins & python_env ownership"
+  file: >
+    path="{{ item }}"
+    owner="shinken"
+    group="shinken"
+    recurse=yes
+  with_items:
+    - "{{ custom_plugins_dir }}"
+    - "{{ custom_plugins_env }}"

@@ -1,0 +1,2 @@
+custom_plugins_dir: /usr/local/shinken/plugins
+custom_plugins_env: /usr/local/shinken/python_env

@@ -1,0 +1,24 @@
+---
+# Create and configure Shinken users based on apache htpasswd
+- name: "Install python-passlib - using apt-get"
+  apt: >
+    name="python-passlib"
+    state="present"
+    update_cache=yes
+    cache_valid_time={{ apt_cache_time }}
+
+- name: "Create users"
+  htpasswd: >
+    path="/etc/shinken/htpasswd.users"
+    name="{{ item.key }}"
+    password="{{ item.value }}"
+    state=present
+  with_dict: shinken_users
+
+- name: "Common user login for webui and thruk"
+  file: >
+    src="/etc/shinken/htpasswd.users"
+    dest="/etc/thruk/htpasswd"
+    state="link"
+    force=yes
+  notify: restart apache

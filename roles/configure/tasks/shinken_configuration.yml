@@ -1,0 +1,102 @@
+---
+# shinken configuration
+- name: "Initialize shinken cli"
+  shell: "su - shinken -c 'shinken --init'"
+  args:
+    creates: "/home/shinken/.shinken.ini"
+
+- name: "Install shinken modules"
+  shell: "su - shinken -c 'shinken install {{ item.key }}'"
+  args:
+    creates: "/etc/shinken/modules/{{ item.value }}"
+  notify: restart shinken-arbiter
+  with_dict:
+    "webui": "webui.cfg"
+    "auth-htpasswd": "auth_htpasswd.cfg"
+    "sqlitedb": "sqlitedb.cfg"
+    "logstore-sqlite": "logstore_sqlite.cfg"    # livestatus dependency. Helful for report generation
+    "livestatus": "livestatus.cfg"
+    "ndodb-mysql": "ndodb_mysql.cfg"
+    "retention-redis": "retention-redis.cfg"
+    "graphite": "graphite.cfg"
+    "ui-graphite": "ui-graphite.cfg"
+
+- name: "Install module dependencies"
+  apt: >
+    name={{ item }}
+    state="present"
+    update_cache=yes
+    cache_valid_time={{ apt_cache_time }}
+  with_items:
+    - python-redis
+
+- name: "Configure shinken modules"
+  copy: >
+    src="{{ item.key }}"
+    dest="{{ item.value }}"
+    owner=shinken
+    group=shinken
+    mode=0644
+  notify: restart shinken-arbiter
+  with_dict:
+    "shinken/broker-master.cfg": "/etc/shinken/brokers/broker-master.cfg"
+    "shinken/scheduler-master.cfg": "/etc/shinken/schedulers/scheduler-master.cfg"
+    "shinken/webui.cfg": "/etc/shinken/modules/webui.cfg"
+    "shinken/graphite.cfg": "/etc/shinken/modules/graphite.cfg"
+    "shinken/livestatus.cfg": "/etc/shinken/modules/livestatus.cfg"
+
+- name: "Configure shinken modules - using template"
+  template: >
+    src="{{ item.key }}"
+    dest="{{ item.value }}"
+    owner=shinken
+    group=shinken
+    mode=0644
+  notify: restart shinken-arbiter
+  with_dict:
+    "ui-graphite.cfg": "/etc/shinken/modules/ui-graphite.cfg"
+
+- name: "Copy main config file - shinken.cfg"
+  template: >
+    src="shinken.cfg.j2"
+    dest="/etc/shinken/shinken.cfg"
+    owner=shinken
+    group=shinken
+    mode=0644
+  notify: restart shinken-arbiter
+
+- name: "Copy custom configuration"
+  synchronize: >
+    src="custom_configs/"
+    dest="/etc/shinken/custom_configs/"
+    mode="push"
+    recursive=yes
+    archive=yes
+    rsync_opts="--no-owner,--no-group"
+  notify: restart shinken-arbiter
+
+- name: "custom resource with paths defined for current setup"
+  template: >
+    src="paths.cfg.j2"
+    dest="/etc/shinken/custom_configs/resources/paths.cfg"
+    owner=shinken
+    group=shinken
+    mode=0644
+  notify: restart shinken-arbiter
+
+## Enable sudo access for user: shinken
+- name: "Include /etc/sudoers.d in sudoers file"
+  lineinfile: >
+    dest="/etc/sudoers"
+    line="#includedir /etc/sudoers.d"
+    state="present"
+    validate='visudo -cf %s'
+
+- name: "Grant sudo access for user - shinken"
+  copy: >
+    content="%shinken ALL=(ALL) NOPASSWD:ALL"
+    dest="/etc/sudoers.d/shinken"
+    owner="root"
+    group="root"
+    mode="0400"
+    validate='visudo -cf %s'

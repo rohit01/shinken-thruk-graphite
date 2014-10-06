@@ -1,0 +1,14 @@
+---
+## Configure everything once installed
+
+# Shinken configuration
+- include: shinken_configuration.yml
+
+# Apache configuration for shinken, thruk and graphite
+- include: apache_configuration.yml
+
+# Install custom plugins for use with shinken
+- include: custom_plugins.yml
+
+# create users for login
+- include: create_users.yml

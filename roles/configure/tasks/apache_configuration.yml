@@ -1,0 +1,34 @@
+---
+# Configure Shinken webui to run under apache using reverse proxy
+- name: Install apache modules
+  apt: >
+    name={{ item }}
+    state="present"
+    update_cache=yes
+    cache_valid_time={{ apt_cache_time }}
+  notify: restart apache
+  with_items:
+    - libapache2-mod-proxy-msrpc
+
+- name: "Configure apache for shinken and thruk"
+  copy: >
+    src="{{ item.key }}"
+    dest="{{ item.value }}"
+    owner=www-data
+    group=www-data
+    mode=0644
+  notify: restart apache
+  with_dict:
+    "shinken/shinken-apache.conf": "/etc/apache2/conf-available/shinken-apache.conf"
+    "shinken/thruk_local.conf": "/etc/thruk/thruk_local.conf"
+
+- name: "Enable apache modules and conf"
+  file: >
+    src="{{ item.key }}"
+    dest="{{ item.value }}"
+    state="link"
+  notify: restart apache
+  with_dict:
+    "/etc/apache2/mods-available/xml2enc.load": "/etc/apache2/mods-enabled/xml2enc.load"
+    "/etc/apache2/mods-available/proxy_http.load": "/etc/apache2/mods-enabled/proxy_http.load"
+    "/etc/apache2/conf-available/shinken-apache.conf": "/etc/apache2/conf-enabled/shinken-apache.conf"

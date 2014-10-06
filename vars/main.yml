@@ -1,0 +1,21 @@
+# 2592000 seconds = 30 days
+apt_cache_time: 2592000
+
+## Basic auth for secure graphite. #ChangeThis
+BASIC_AUTH_USER: "0b549abc-79f9-4302-b1ce-8e7e34896eff"
+BASIC_AUTH_PASSWORD: "YTRiNzg3OTdhMTkxYmVjMjA4OTdkMGZmZTVmMzg5NjM3NTM4OTg3MzQzMDdmNmJj"
+
+## Update dependencies for custom python based NRPE plugins in this list
+plugins_env_requirements:
+  ## Dependency for AWS SES based email notification plugin
+  - jinja2==2.7.3
+  - boto
+
+## Shinken & Thruk users + password. Users must be defined in contacts.
+## Note: This stores password in cleartext. You may want to use ansible vault for additional security
+## <ChangeThis>
+shinken_users:
+  ## Username: Password
+  "admin": "admin"                 # Default shinken WebUI login. http://localhost
+  "thrukadmin": "thrukadmin"       # Default Thruk UI login. http://localhost/thruk/
+  #--- <<You may add more users here>>

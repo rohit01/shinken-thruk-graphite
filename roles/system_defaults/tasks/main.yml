@@ -1,0 +1,33 @@
+---
+## Set system default settings
+- name: "Update apt repository once"
+  shell: "apt-get update && touch /tmp/.apt_get_updated_once"
+  sudo: yes
+  args:
+    creates: "/tmp/.apt_get_updated_once"
+  ignore_errors: yes
+
+- name: "Set hostname, if 'host_hostname' and 'host_fqdn' variables are defined"
+  hostname: >
+    name="{{ host_hostname }}"
+  when: "('{{ host_hostname | default('X Y') }}' != 'X Y') and ('{{ host_fqdn | default('X Y') }}' != 'X Y')"
+
+- name: "Set fqdn, if 'host_hostname' and 'host_fqdn' variables are defined"
+  lineinfile: >
+    line="127.0.0.1 {{ host_fqdn }} {{ host_hostname }}"
+    state="present"
+    dest="/etc/hosts"
+  when: "('{{ host_hostname | default('X Y') }}' != 'X Y') and ('{{ host_fqdn | default('X Y') }}' != 'X Y')"
+
+- name: "Set timezone as IST"
+  copy: >
+    content="Asia/Kolkata"
+    dest=/etc/timezone
+    owner=root
+    group=root
+    mode=0644
+  register: result
+
+- name: "update timezone"
+  command: dpkg-reconfigure --frontend noninteractive tzdata
+  when: result|changed

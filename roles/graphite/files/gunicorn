@@ -1,0 +1,101 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:         Gunicorn init script for graphite django app
+# Required-Start:   $syslog
+# Required-Stop:    $syslog
+# Should-Start:     $local_fs
+# Should-Stop:      $local_fs
+# Default-Start:    2 3 4 5
+# Default-Stop:     0 1 6
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+NAME=gunicorn
+PROJECT_PATH=/opt/graphite/webapp/graphite
+LOGFILE=/var/log/gunicorn.log
+LOGLEVEL=warning
+NUM_WORKERS=4
+URL=127.0.0.1:8081
+PID=/var/run/gunicorn.pid
+lockfile=/var/run/gunicorn.lock
+TIMEOUT=300                    # 5 minutes
+KEEP_ALIVE=15
+USER=root
+GROUP=root
+
+
+check_state() {
+    kill -0 $(cat $PID 2>/dev/null) &>/dev/null
+    return $?
+}
+
+
+rhstatus() {
+    status_of_proc -p $PID gunicorn "${NAME}"
+}
+
+
+start() {
+    check_state
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ]; then
+        log_daemon_msg "$NAME already started"
+        log_end_msg 1
+        return $RETVAL
+    fi
+    log_daemon_msg "Starting $NAME: "
+    cd $PROJECT_PATH
+    gunicorn_django -D -b $URL -w $NUM_WORKERS --user=$USER \
+        --group=$GROUP --pid=$PID --log-level=$LOGLEVEL --log-file=$LOGFILE \
+        --backlog=2048 -t $TIMEOUT --keep-alive $KEEP_ALIVE
+    sleep 2
+    check_state
+    RETVAL=$?
+    if [ $RETVAL -eq 0 ]; then
+        touch $lockfile
+        log_end_msg 0
+    else
+        log_end_msg 1
+    fi
+    return $RETVAL
+}
+
+
+stop() {
+    log_daemon_msg "Shutting down $NAME: "
+    kill $(cat $PID) &>/dev/null
+    sleep 2
+    check_state
+    RETVAL=$?
+    if [ $RETVAL -eq 1 ]; then
+        RETVAL=0
+        > $lockfile
+        rm -f $PID
+        log_end_msg 0
+    else
+        log_end_msg 1
+    fi
+    return $RETVAL
+}
+
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        sleep 1
+        start
+        ;;
+    status)
+        rhstatus
+        ;;
+    *)
+    echo $"Usage: $0 {start|stop|restart|reload|status}"
+    exit 2
+esac

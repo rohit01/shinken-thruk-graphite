@@ -1,0 +1,109 @@
+---
+# monitoring plugins installation
+- name: "Install dependencies for installing monitoring-plugins & nrpe"
+  apt: >
+    name="{{ item }}"
+    state="present"
+    update_cache=yes
+    cache_valid_time={{ apt_cache_time }}
+  with_items:
+    - build-essential
+    - libssl-dev
+    - dnsutils
+    - fping
+    - libldap2-dev
+    - libpq-dev
+    - libradiusclient-ng-dev
+    - smbclient
+    - gawk
+    - libsys-statistics-linux-perl
+
+- name: "Create source directory - /usr/src/monitoring-plugins"
+  file: >
+    path="/usr/src/monitoring-plugins"
+    mode="755"
+    state="directory"
+
+- name: "Copy monitoring plugins source"
+  copy: >
+    src="{{ mplugins_version }}.tar.gz"
+    dest="/usr/src/monitoring-plugins/"
+    mode=0644
+
+- name: "Copy nrpe plugins source"
+  copy: >
+    src="{{ nrpe_version }}.tar.gz"
+    dest="/usr/src/monitoring-plugins/"
+    mode=0644
+
+#### Install Monitoring Plugins ###############################################
+- name: "Unpack monitoring plugins"
+  shell: "tar -xzf {{ mplugins_version }}.tar.gz"
+  args:
+    chdir: "/usr/src/monitoring-plugins"
+    creates: "/usr/src/monitoring-plugins/{{ mplugins_version }}"
+
+- name: "Configure monitoring plugins"
+  shell: "./configure --with-nagios-user=shinken --with-nagios-group=shinken"
+  args:
+    chdir: "/usr/src/monitoring-plugins/{{ mplugins_version }}"
+    creates: "/usr/src/monitoring-plugins/{{ mplugins_version }}/Makefile"
+
+- name: "Make monitoring plugins"
+  shell: "make"
+  args:
+    chdir: "/usr/src/monitoring-plugins/{{ mplugins_version }}"
+    creates: "/usr/src/monitoring-plugins/{{ mplugins_version }}/plugins/check_ping"
+
+- name: "Make Install monitoring plugins"
+  shell: "make install"
+  args:
+    chdir: "/usr/src/monitoring-plugins/{{ mplugins_version }}"
+    creates: "/usr/local/libexec/check_ping"
+
+#### Install Nrpe Plugins #####################################################
+- name: "Unpack nrpe plugins"
+  shell: "tar -xzf {{ nrpe_version }}.tar.gz"
+  args:
+    chdir: "/usr/src/monitoring-plugins"
+    creates: "/usr/src/monitoring-plugins/{{ nrpe_version }}"
+
+- name: "Configure nrpe plugins"
+  shell: "./configure --with-nagios-user=shinken --with-nagios-group=shinken --with-nrpe-user=shinken --with-nrpe-group=shinken  --with-ssl=/usr/bin/openssl --with-ssl-lib=/usr/lib/x86_64-linux-gnu"
+  args:
+    chdir: "/usr/src/monitoring-plugins/{{ nrpe_version }}"
+    creates: "/usr/src/monitoring-plugins/{{ nrpe_version }}/Makefile"
+
+- name: "Make nrpe plugins"
+  shell: "make"
+  args:
+    chdir: "/usr/src/monitoring-plugins/{{ nrpe_version }}"
+    creates: "/usr/src/monitoring-plugins/{{ nrpe_version }}/src/check_nrpe"
+
+- name: "Make Install nrpe plugins"
+  shell: "make install && cp /usr/local/nagios/libexec/check_nrpe /usr/local/libexec/"
+  args:
+    chdir: "/usr/src/monitoring-plugins/{{ nrpe_version }}"
+    creates: "/usr/local/libexec/check_nrpe"
+
+- name: "Copy few more useful plugins"
+  synchronize: >
+    src="extra/"
+    dest="/usr/local/libexec/"
+    mode="push"
+    recursive=yes
+    archive=yes
+    rsync_opts="--no-owner,--no-group"
+
+#### plugins softlink to default location #####################################
+- name: "Ensure directory exists - /usr/lib/nagios/"
+  file: >
+    path="/usr/lib/nagios"
+    mode="0755"
+    state="directory"
+
+- name: "Create softlink - /usr/lib/nagios/plugins"
+  file: >
+    src="/usr/local/libexec"
+    dest="/usr/lib/nagios/plugins"
+    state="link"
