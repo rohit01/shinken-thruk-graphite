@@ -1,5 +1,6 @@
 ---
-##
+## Installation + configuration of server side monitoring application:
+## ---> Shinken + Thruk + Graphite <---
 - hosts: shinken
   gather_facts: no
   sudo: yes

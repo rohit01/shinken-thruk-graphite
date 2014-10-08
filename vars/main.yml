@@ -1,9 +1,12 @@
 # 2592000 seconds = 30 days
 apt_cache_time: 2592000
 
-## Basic auth for secure graphite. #ChangeThis
+
+## Basic auth for graphite. Integrated with shinken webui. You will not need to
+## login to graphite. #ChangeCredentials
 BASIC_AUTH_USER: "0b549abc-79f9-4302-b1ce-8e7e34896eff"
 BASIC_AUTH_PASSWORD: "YTRiNzg3OTdhMTkxYmVjMjA4OTdkMGZmZTVmMzg5NjM3NTM4OTg3MzQzMDdmNmJj"
+
 
 ## Update dependencies for custom python based NRPE plugins in this list
 plugins_env_requirements:
@@ -11,12 +14,14 @@ plugins_env_requirements:
   - jinja2==2.7.3
   - boto
 
-## Shinken & Thruk users + password. Users must be defined in contacts.
-## Note: This stores password in cleartext. You may want to use ansible vault for additional security
-## <ChangeThis>
+
+## Shinken & Thruk user authentication. These users need to be defined as shinken
+## contacts as well.
+## Note: The password defined here is in cleartext. You may want to use ansible
+## vault for additional security. Password stored on the server side is encrypted.
+##
 shinken_users:
-  ## Username: Password
-  "admin": "admin"                 # Admin for WebUI login. http://localhost
-  "thrukadmin": "thrukadmin"       # Admin for Thruk UI login. http://localhost/thruk/
-  "demo": "welcome"                # Defined in contacts for demo purpose
-  #--- <<Define more users here>>
+  ## Username: Password  --        #ChangeCredentials
+  "admin": "<password>"            # Admin for WebUI login. http://<hostname>/
+  "thrukadmin": "<password>"       # Admin for Thruk UI login. http://<hostname>/thruk/
+  "demo": "welcome"                # Readonly user for demo purpose. Visit: http://shinken-demo.rohit.io
